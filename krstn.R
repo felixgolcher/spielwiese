@@ -1,3 +1,5 @@
+library(tidyverse)
+
 datasourceConfirmed <- "https://github.com/CSSEGISandData/COVID-19/raw/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv"
 datasourceDeaths <- "https://github.com/CSSEGISandData/COVID-19/raw/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv"
 
@@ -44,6 +46,8 @@ dataRegion <- data.frame(days = 1:(dim(dataConfirmed)[2]-4),
 modelConfirmed <- lm(confirmedRatio ~ days, dataRegion, na.action = na.omit)
 modelDeaths <- lm(deathsRatio ~ days, dataRegion, na.action = na.omit)
 
+dataRegion
+
 library(ggplot2)
 library(gridExtra)
 DiffPlot <- ggplot(dataRegion, aes(date, confirmedRatio)) + 
@@ -59,9 +63,18 @@ DiffPlot <- ggplot(dataRegion, aes(date, confirmedRatio)) +
               method = "lm", 
               aes(date, confirmedRatio),
               colour = 'black',
-              method.args = list(na.action = na.omit))
+              method.args = list(na.action = na.omit)) + 
+  theme(legend.position = c(0.9, 0.9))
 GumbelPlot <- ggplot(dataRegion, aes(date, confirmedDiff)) +
   ggtitle(paste("B: deltaN for", dataConfirmed[region, 2])) +
   geom_point() +
   geom_point(data = dataRegion, aes(date, deathsDiff), colour = 'red')
 grid.arrange(DiffPlot, GumbelPlot, ncol=2)
+
+dataRegion %>%
+  select(days, date, ends_with("Ratio")) %>% 
+  pivot_longer(confirmedRatio:deathsRatio) %>% 
+  ggplot(aes(date, value, col=name))+
+  geom_point()+
+  geom_smooth(method="lm",
+              data=function(dtx)subset(dtx, name == "confirmedRatio"))
