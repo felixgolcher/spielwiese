@@ -1,0 +1,63 @@
+---
+title: "Prävalenz oder wie auch immer"
+author: "Karsten Tabelow"
+date: "5/7/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Ergebnistafeln
+
+Wir legen zunächst die Parameter des Testes fest:
+```{r parameter}
+t <- 0.98 # Spezifität, Trennschärfe
+e <- 0.99 # Sensitivität, Empfindlichkeit
+```
+
+und nehmen eine Prävalenz an:
+```{r prevalence}
+p <- 0.01 # Prävalenz
+```
+
+Daraus ergibt bei einer Bevölkerungsgröße von
+```{r populatationsize}
+s <- 1000000 # eine Million
+```
+
+folgende Kontingenztafel
+```{r contingencytable}
+contingency <- cbind(c(e*p*s, (1-e)*p*s), 
+                     c((1-t)*(1-p)*s, t*(1-p)*s))
+colnames(contingency) <- c("krank", "nicht-krank")
+rownames(contingency) <- c("positiv", "negativ")
+print(contingency)
+```
+
+Damit ist der Anteil der echt Erkrankten unter den positiv getesteten:
+```{r fraction}
+e*p/(e*p + (1-t)*(1-p))
+```
+
+beziehungsweise als Function der Prävalenz mit den Parameter Trennschärfe (hier `r t`) und Empfindlichkeit (hier `r e`):
+
+```{r dependenceplot}
+frac <- function(p, e, t) e*p/(e*p + (1-t)*(1-p))
+library(ggplot2)
+pp = seq(0.001, 1, by = 0.001)
+out <- data.frame(prevalence = pp,
+                  specifity = c(rep(0.97, length(pp)), 
+                                rep(0.98, length(pp)), 
+                                rep(0.99, length(pp)), 
+                                rep(0.995, length(pp))),
+                  fraction = c(frac(pp, e, 0.97), 
+                               frac(pp, e, 0.98), 
+                               frac(pp, e, 0.99),
+                               frac(pp, e, 0.995)))
+sp <- ggplot(out, aes(x = prevalence, y = fraction, col = specifity)) + 
+  geom_point() 
+sp + scale_x_continuous(trans = 'log10')
+```
+
