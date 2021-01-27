@@ -44,3 +44,8 @@ for (i in 1:dim(bb)[1]) {
 }
 
 plot(log(as.numeric(bb[, 3])), log(as.numeric(bb[, 2])), xlab = "log-income per capita", ylab = "log vacciation rate")
+
+library(tidyverse)
+
+bb %>% 
+  as_tibble()
