@@ -1,3 +1,7 @@
+# COVID data: git clone https://github.com/owid/covid-19-data.git
+# GDP data: https://ourworldindata.org/grapher/gdp-per-capita-worldbank?tab=chart&region=World
+
+
 dd <- as.matrix(read.csv2("vaccinations.csv", sep = ","))
 
 bb <- NULL
