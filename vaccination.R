@@ -46,6 +46,28 @@ for (i in 1:dim(bb)[1]) {
 plot(log(as.numeric(bb[, 3])), log(as.numeric(bb[, 2])), xlab = "log-income per capita", ylab = "log vacciation rate")
 
 library(tidyverse)
+library(ggrepel)
 
-bb %>% 
-  as_tibble()
+(bb %>% 
+  as_tibble() %>% 
+  mutate(V2 = as.numeric(V2),
+         V3 = as.numeric(V3)) %>% 
+  rename(income="V3",
+         vaccrate = "V2") %>% 
+    filter(!is.na(income),
+           income>0,
+           !is.na(vaccrate))-> bbdat)%>% 
+  ggplot(aes(income, vaccrate, label=location,
+             col = location == "Israel" | location=="Germany"))+
+  geom_point()+
+  geom_text_repel()+
+  scale_x_log10()+
+  scale_y_log10()+
+  scale_color_manual(values=c("black","red"))+
+  guides(color=F)
+ggsave("vacc.png")
+
+
+bbdatclean <- bbdat %>% filter(vaccrate>0)
+
+cor.test(log(bbdatclean$income), log(bbdatclean$vaccrate), use = "complete.obs")
