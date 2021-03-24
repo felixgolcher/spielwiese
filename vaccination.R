@@ -1,8 +1,12 @@
 # COVID data: git clone https://github.com/owid/covid-19-data.git
 # GDP data: https://ourworldindata.org/grapher/gdp-per-capita-worldbank?tab=chart&region=World
 
+library(tidyverse)
+library(ggrepel)
 
-dd <- as.matrix(read.csv2("vaccinations.csv", sep = ","))
+dd <- as.matrix(da <- read.csv2("data/vaccinations.csv", sep = ","))
+
+db <- read_csv("data/vaccinations.csv")
 
 bb <- NULL
 country <- ""
@@ -45,8 +49,25 @@ for (i in 1:dim(bb)[1]) {
 
 plot(log(as.numeric(bb[, 3])), log(as.numeric(bb[, 2])), xlab = "log-income per capita", ylab = "log vacciation rate")
 
-library(tidyverse)
-library(ggrepel)
+
+EU <- c("Austria",
+        "Belgium",
+        "Bulgaria")
+
+(dc <- read_csv("gdp-per-capita-worldbank.csv") %>% 
+  rename(GDP = 4)) %>% 
+  ggplot(aes(Year, GDP, group=Entity))+
+  geom_path(alpha=.3)+
+  scale_y_log10()
+
+(dc %>% group_by(Entity) %>% 
+    arrange(desc(Year)) %>% 
+    top_n(1) %>% 
+    rename(location="Entity",
+           iso_code="Code") %>% 
+    right_join(db)%>% 
+    mutate(pop = people_vaccinated/people_vaccinated_per_hundred*100) %>% 
+    select(c(location, date, people_vaccinated_per_hundred, GDP, pop), everything()) ->de)
 
 (bb %>% 
   as_tibble() %>% 

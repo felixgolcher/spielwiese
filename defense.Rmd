@@ -1,0 +1,99 @@
+```{r}
+library(tidyverse)
+library(ggrepel)
+knitr::opts_chunk$set(cache=T,#$
+               echo=FALSE, autodep=T)
+
+```
+
+```{r}
+tibble(defense_budget = c(738,
+         193.3,
+         64.1,
+         61.5,
+         60.6,
+         55.0,
+         51.3,
+         49.7,
+         48.5,
+         40.4,
+         31.3,
+         29.3,
+         22.1,
+         20.0,
+         19.9),
+       Code = c("USA",
+                   "CHN",
+                   "IND",
+                   "GBR",
+                   "RUS",
+                   "FRA",
+                   "DEU",
+                   "JPN",
+                   "SAU",
+                   "KOR",
+                   "AUS",
+                   "ITA",
+                   "BRA",
+                   "CAN",
+                   "ISR")) %>% 
+  mutate(Code = factor(Code, levels = Code[order(-defense_budget)]),
+         defense_budget = defense_budget*1e9,
+         rank = 1:n()) -> db
+```
+
+from [https://ourworldindata.org/grapher/gross-domestic-product](https://ourworldindata.org/grapher/gross-domestic-product)
+
+```{r}
+(read_csv("gross-domestic-product.csv") %>% 
+   rename(GDP = 4) %>% 
+   group_by(Code, Entity) %>%
+   filter(!is.na(Code),
+          Code != "OWID_WRL") %>% 
+   summarise(GDP = GDP[Year == max(Year)]) %>% 
+   arrange(desc(GDP)) %>%
+   ungroup() %>% 
+   mutate(rank_gdp = 1:n())->gdp) %>% 
+  print(n = 20)
+```
+
+```{r}
+left_join(db, gdp) -> gdpd
+```
+
+
+```{r}
+ggplot(gdpd, aes(label=Entity, rank, defense_budget))+
+  geom_line(color="grey",linetype="dashed")+
+  geom_text_repel()+
+  scale_x_log10()+
+  scale_y_log10()+
+  geom_point()+
+  theme_minimal()
+```
+
+```{r}
+ggplot(gdpd, aes(label=Entity, rank_gdp, GDP))+
+  geom_line(color="grey",linetype="dashed")+
+  geom_text_repel()+
+  scale_x_log10()+
+  scale_y_log10()+
+  geom_point()+
+  theme_minimal()
+```
+
+
+```{r}
+ggplot(gdpd, aes(GDP, defense_budget, label=Entity))+
+  geom_text_repel()+
+  geom_point()+
+  scale_x_log10()+
+  scale_y_log10()+
+  theme_minimal()
+```
+
+```{r}
+ggplot(gdpd, aes(defense_budget/GDP))+
+  geom_histogram()
+```
+
